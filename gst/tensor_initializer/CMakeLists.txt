@@ -1,0 +1,1 @@
+ADD_LIBRARY(tensor_initializerOBJ OBJECT tensor_initializer.c)

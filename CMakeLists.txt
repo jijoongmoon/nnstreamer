@@ -89,6 +89,7 @@ SET(PROJECTS
 	tensor_split
 	tensor_transform
 	tensor_filter
+	tensor_initializer
 )
 
 ADD_SUBDIRECTORY(nnstreamer_example)
