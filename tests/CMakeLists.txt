@@ -36,6 +36,11 @@ ADD_EXECUTABLE(unittest_sink nnstreamer_sink/unittest_sink.cpp ${gtestSrc})
 TARGET_INCLUDE_DIRECTORIES(unittest_sink PUBLIC ${pkgs_INCLUDE_DIRS} ${testpkgs_INCLUDE_DIRS} ${gtestInc})
 TARGET_LINK_LIBRARIES(unittest_sink nnstreamer ${pkgs_LIBRARIES} ${testpkgs_LIBRARIES} ${gtestLink})
 
+# Unit test using tensor_repo_dynamic
+ADD_EXECUTABLE(unittest_repo nnstreamer_repo_dynamicity/tensor_repo_dynamic_test.c)
+TARGET_INCLUDE_DIRECTORIES(unittest_repo PUBLIC ${pkgs_INCLUDE_DIRS} ${testpkgs_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(unittest_repo nnstreamer ${pkgs_LIBRARIES} ${testpkgs_LIBRARIES})
+
 # Unit test uses this custom filter
 ADD_LIBRARY(nnscustom_framecounter SHARED nnstreamer_sink/nnscustom_framecounter.c)
 TARGET_LINK_LIBRARIES(nnscustom_framecounter nnstreamer glib-2.0)
