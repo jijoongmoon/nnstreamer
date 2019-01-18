@@ -60,6 +60,7 @@ struct _GstTensorRepoSink
   GstClockTime last_render_time;
   GstCaps *in_caps;
   guint myid;
+  guint o_myid;
 };
 
 /**

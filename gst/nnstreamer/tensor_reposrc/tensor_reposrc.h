@@ -56,6 +56,7 @@ struct _GstTensorRepoSrc
   GstTensorsConfig config;
   gboolean silent;
   guint myid;
+  guint o_myid;
   GstCaps *caps;
   gboolean ini;
   gint fps_n, fps_d;

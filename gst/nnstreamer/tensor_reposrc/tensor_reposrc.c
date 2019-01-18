@@ -31,7 +31,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
+#include <stdio.h>
 #include <string.h>
 #include "tensor_reposrc.h"
 
@@ -210,8 +210,14 @@ gst_tensor_reposrc_set_property (GObject * object, guint prop_id,
       self->silent = g_value_get_boolean (value);
       break;
     case PROP_SLOT_ID:
+      self->o_myid = self->myid;
       self->myid = g_value_get_uint (value);
       self->negotiation = FALSE;
+      printf ("--------src-----------in set property %d %d\n", self->o_myid,
+          self->myid);
+      if (self->o_myid != self->myid)
+        gst_tensor_repo_set_changed (self->o_myid, self->myid, FALSE);
+      gst_tensor_repo_add_repodata (self->myid, FALSE);
       break;
     case PROP_CAPS:
     {
@@ -300,8 +306,11 @@ gst_tensor_reposrc_create (GstPushSrc * src, GstBuffer ** buffer)
     }
     self->ini = TRUE;
   } else {
-    buf = gst_tensor_repo_get_buffer (self->myid);
-
+    printf ("==== before get buffer : old_id %d, nth= %d \n", self->o_myid,
+        self->myid);
+    buf = gst_tensor_repo_get_buffer (self->myid, self->o_myid);
+    printf ("==== after get buffer : old_id %d, nth= %d \n", self->o_myid,
+        self->myid);
     if (buf == NULL)
       return GST_FLOW_EOS;
 

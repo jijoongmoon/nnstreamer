@@ -31,7 +31,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
+#include <stdio.h>
 #include "tensor_reposink.h"
 
 /**
@@ -180,8 +180,13 @@ gst_tensor_reposink_set_property (GObject * object, guint prop_id,
       self->silent = g_value_get_boolean (value);
       break;
     case PROP_SLOT:
+      self->o_myid = self->myid;
       self->myid = g_value_get_uint (value);
-      gst_tensor_repo_add_repodata (self->myid);
+      printf ("--------sink-----------in set property %d %d\n", self->o_myid,
+          self->myid);
+      if (self->o_myid != self->myid)
+        gst_tensor_repo_set_changed (self->o_myid, self->myid, TRUE);
+      gst_tensor_repo_add_repodata (self->myid, TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -334,7 +339,13 @@ gst_tensor_reposink_render_buffer (GstTensorRepoSink * self, GstBuffer * buffer)
   if (notify) {
     gboolean ret = FALSE;
     self->last_render_time = now;
-    ret = gst_tensor_repo_set_buffer (self->myid, buffer, self->in_caps);
+    printf ("---- before set buffer : old_id %d, nth= %d \n", self->o_myid,
+        self->myid);
+    ret =
+        gst_tensor_repo_set_buffer (self->myid, self->o_myid, buffer,
+        self->in_caps);
+    printf ("---- after set buffer : old_id %d, nth= %d \n", self->o_myid,
+        self->myid);
     if (!ret)
       GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
           ("Cannot Set buffer into repo [key: %d]", self->myid), NULL);

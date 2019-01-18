@@ -85,6 +85,10 @@ typedef struct
   GCond cond_pull;
   GMutex lock;
   gboolean eos;
+  gboolean src_changed;
+  guint src_id;
+  gboolean sink_changed;
+  guint sink_id;
 } GstTensorRepoData;
 
 /**
@@ -110,13 +114,13 @@ gst_tensor_repo_get_repodata (guint nth);
  */
 /* guint */
 gboolean
-gst_tensor_repo_add_repodata (guint myid);
+gst_tensor_repo_add_repodata (guint myid, gboolean is_sink);
 
 /**
  * @brief push GstBuffer into repo
  */
 gboolean
-gst_tensor_repo_set_buffer (guint nth, GstBuffer * buffer, GstCaps * caps);
+gst_tensor_repo_set_buffer (guint nth, guint o_nth, GstBuffer * buffer, GstCaps * caps);
 
 /**
  * @brief get EOS
@@ -130,11 +134,17 @@ gst_tensor_repo_check_eos(guint nth);
 gboolean
 gst_tensor_repo_set_eos(guint nth);
 
+gboolean
+gst_tensor_repo_set_changed(guint o_nth, guint nth, gboolean is_sink);
+
 /**
  * @brief Get GstTensorRepoData from repo
  */
 GstBuffer *
-gst_tensor_repo_get_buffer (guint nth);
+gst_tensor_repo_get_buffer (guint nth, guint o_nth);
+
+gboolean
+gst_tensor_repo_check_changed (guint nth, guint *newid, gboolean is_sink);
 
 /**
  * @brief remove nth GstTensorRepoData from GstTensorRepo
