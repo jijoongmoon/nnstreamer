@@ -2,26 +2,30 @@
 library('testtensors',
   join_paths('nnstreamer_tensors', 'tensors_test', 'gsttesttensors.c'),
   dependencies: [gst_dep, nnstreamer_dep],
-  install: false
+  install: install_test,
+  install_dir: unittest_install_dir
 )
 
 library('tensorscheck',
   join_paths('nnstreamer_tensors', 'tensors_test', 'gsttensorscheck.c'),
   dependencies: [gst_dep, nnstreamer_dep],
-  install: false
+  install: install_test,
+  install_dir: unittest_install_dir
 )
 
 # These custom filters are used in unittest_sink.
 library('nnscustom_framecounter',
   join_paths('nnstreamer_sink', 'nnscustom_framecounter.c'),
   dependencies: [glib_dep, nnstreamer_dep],
-  install: false
+  install: install_test,
+  install_dir: join_paths(unittest_install_dir,'tests')
 )
 
 library('nnscustom_drop_buffer',
   join_paths('nnstreamer_sink', 'nnscustom_drop_buffer.c'),
   dependencies: [nnstreamer_dep],
-  install: false
+  install: install_test,
+  install_dir: join_paths(unittest_install_dir, 'tests')
 )
 
 # Build and copy exe for ssat
@@ -30,7 +34,8 @@ if libpng_dep.found()
   b2p = executable('bmp2png',
     'bmp2png.c',
     dependencies: [libpng_dep],
-    install: false
+    install: install_test,
+    install_dir: unittest_install_dir
   )
 
   copy = find_program('cp')
@@ -46,7 +51,8 @@ endif
 executable('unittest_repo',
   join_paths('nnstreamer_repo_dynamicity', 'tensor_repo_dynamic_test.c'),
   dependencies: [nnstreamer_dep, gst_dep, glib_dep],
-  install: false
+  install: install_test,
+  install_dir: unittest_install_dir
 )
 
 # gtest
@@ -64,7 +70,8 @@ if gtest_dep.found()
   unittest_common = executable('unittest_common',
     join_paths('common', 'unittest_common.cpp'),
     dependencies: [nnstreamer_unittest_deps],
-    install: false
+    install: install_test,
+    install_dir: unittest_install_dir
   )
 
   test('unittest_common', unittest_common)
@@ -73,7 +80,8 @@ if gtest_dep.found()
   unittest_sink = executable('unittest_sink',
     join_paths('nnstreamer_sink', 'unittest_sink.cpp'),
     dependencies: [nnstreamer_unittest_deps],
-    install: false
+    install: install_test,
+    install_dir: unittest_install_dir
   )
 
   test('unittest_sink', unittest_sink, args: ['--gst-plugin-path=..'])
@@ -82,7 +90,8 @@ if gtest_dep.found()
   unittest_plugins = executable('unittest_plugins',
     join_paths('nnstreamer_plugins', 'unittest_plugins.cpp'),
     dependencies: [nnstreamer_unittest_deps],
-    install: false
+    install: install_test,
+    install_dir: unittest_install_dir
   )
 
   test('unittest_plugins', unittest_plugins, args: ['--gst-plugin-path=..'])

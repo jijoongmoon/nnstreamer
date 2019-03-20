@@ -370,7 +370,7 @@ gst_api_version = '1.0'
 {fname}_includedir = join_paths({fname}_prefix, get_option('includedir'))
 
 subplugin_install_prefix = join_paths({fname}_prefix, 'lib', 'nnstreamer')
-customfilter_install_dir = join_paths(subplugin_install_prefix, 'customfilters')
+unittest_install_dir = join_paths(subplugin_install_prefix, 'unittest')
 
 {fname}_conf.set('PREFIX', {fname}_prefix)
 {fname}_conf.set('EXEC_PREFIX', {fname}_bindir)
@@ -396,7 +396,7 @@ shared_library('{fname}',
   {fname}_srcfiles_fullpath,
   dependencies: [nnstreamer_dep],
   install: true,
-  install_dir: customfilter_install_dir
+  install_dir: join_paths(unittest_install_dir, '{fname}_srcfiles_fullpath')
 )
 
 # @warning NYI. Static library mode of custom filter is not supported yet.
