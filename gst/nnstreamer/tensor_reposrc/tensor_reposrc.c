@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include "tensor_reposrc.h"
+#include <stdio.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_tensor_reposrc_debug);
 #define GST_CAT_DEFAULT gst_tensor_reposrc_debug
@@ -307,6 +308,7 @@ gst_tensor_reposrc_gen_dummy_buffer (GstTensorRepoSrc * self)
   return buf;
 }
 
+int buffer_created_count = 0;
 /**
  * @brief create func of tensor_reposrc
  */
@@ -326,32 +328,39 @@ gst_tensor_reposrc_create (GstPushSrc * src, GstBuffer ** buffer)
     buf = gst_tensor_reposrc_gen_dummy_buffer (self);
     self->ini = TRUE;
   } else {
-    while (!buf && !eos) {
+    /* while (!buf && !eos) { */
+    if (!buf && !eos) {
       buf = gst_tensor_repo_get_buffer (self->myid, self->o_myid, &eos, &newid);
+      printf ("reposrc] ------------------- getbuffer Done\n");
     }
-    if (eos)
+    if (eos) {
+      gst_tensor_repo_set_eos (self->myid);
+      printf ("reposrc ] set_eos real eos in reposrc_create=\n");
       return GST_FLOW_EOS;
+    }
 
     meta = GST_META_REPO_GET (buf);
 
     if (!self->negotiation && buf != NULL) {
       if (!gst_caps_can_intersect (self->caps, meta->caps)) {
-        GST_ELEMENT_ERROR (GST_ELEMENT (self), CORE, NEGOTIATION,
-            ("Negotiation Failed! : repo_sink & repos_src"), (NULL));
+        /* GST_ELEMENT_ERROR (GST_ELEMENT (self), CORE, NEGOTIATION, */
+        /*     ("Negotiation Failed! : repo_sink & repos_src"), (NULL)); */
         gst_buffer_remove_meta (buf, (GstMeta *) meta);
         gst_buffer_unref (buf);
         gst_tensor_repo_set_eos (self->myid);
+        printf ("reposrc ] nego set_eos in reposrc_create\n");
         return GST_FLOW_EOS;
       }
 
       self->negotiation = TRUE;
-
+      printf ("reposrc ] self->negotiagion = TRUE\n");
     }
     gst_buffer_remove_meta (buf, (GstMeta *) meta);
   }
 
   *buffer = buf;
-
+  printf ("reposrc ] --------------------- %d DONE\n", buffer_created_count);
+  buffer_created_count++;
   return GST_FLOW_OK;
 }
 

@@ -31,7 +31,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-
+#include <stdio.h>
 #include "tensor_reposink.h"
 
 /**
@@ -313,13 +313,14 @@ gst_tensor_reposink_query (GstBaseSink * sink, GstQuery * query)
 /**
  * @brief Push GstBuffer
  */
-static void
+static gboolean
 gst_tensor_reposink_render_buffer (GstTensorRepoSink * self, GstBuffer * buffer)
 {
   GstClockTime now = GST_CLOCK_TIME_NONE;
   guint signal_rate;
   gboolean notify = FALSE;
   g_return_if_fail (GST_IS_TENSOR_REPOSINK (self));
+  gboolean ret = TRUE;
 
   signal_rate = self->signal_rate;
 
@@ -341,15 +342,18 @@ gst_tensor_reposink_render_buffer (GstTensorRepoSink * self, GstBuffer * buffer)
   }
 
   if (notify) {
-    gboolean ret = FALSE;
+    printf ("reposink] notified ! \n");
     self->last_render_time = now;
     ret =
         gst_tensor_repo_set_buffer (self->myid, self->o_myid, buffer,
         self->in_caps);
-    if (!ret)
+    if (!ret) {
+      printf ("reposink] ----------------- set_buffer returns false\n");
       GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
           ("Cannot Set buffer into repo [key: %d]", self->myid), NULL);
+    }
   }
+  return ret;
 }
 
 /**
@@ -358,12 +362,16 @@ gst_tensor_reposink_render_buffer (GstTensorRepoSink * self, GstBuffer * buffer)
 static GstFlowReturn
 gst_tensor_reposink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
+  gboolean ret = TRUE;
   GstTensorRepoSink *self;
   self = GST_TENSOR_REPOSINK (sink);
 
-
-  gst_tensor_reposink_render_buffer (self, buffer);
-  return GST_FLOW_OK;
+  ret = gst_tensor_reposink_render_buffer (self, buffer);
+  if (ret) {
+    return GST_FLOW_OK;
+  } else {
+    return GST_FLOW_EOS;
+  }
 }
 
 /**

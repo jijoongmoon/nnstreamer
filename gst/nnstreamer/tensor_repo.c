@@ -214,6 +214,7 @@ gst_tensor_repo_add_repodata (guint nth, gboolean is_sink)
   return ret;
 }
 
+int set_buffer_count = 1;
 /**
  * @brief push GstBuffer into repo
  */
@@ -224,14 +225,20 @@ gst_tensor_repo_set_buffer (guint nth, guint o_nth, GstBuffer * buffer,
   GST_TENSOR_REPO_LOCK (nth);
 
   GstTensorRepoData *data = gst_tensor_repo_get_repodata (nth);
+  printf ("repo_sink] set_buffer data->eos = %d\n", data->eos);
+
+  while (data->buffer != NULL && !data->eos) {
+    if (data->buffer != NULL)
+      printf ("repo_sink ] data->buffer != NULL!!!\n");
+
+    GST_TENSOR_REPO_WAIT_PULL (nth);
+  }
+  printf ("repo_sink] set_buffer done waiting\n");
 
   if (data->eos) {
+    printf ("repo_sink] data->eos = TRUE\n");
     GST_TENSOR_REPO_UNLOCK (nth);
     return FALSE;
-  }
-
-  while (data->buffer != NULL) {
-    GST_TENSOR_REPO_WAIT_PULL (nth);
   }
 
   data->buffer = gst_buffer_copy (buffer);
@@ -244,8 +251,10 @@ gst_tensor_repo_set_buffer (guint nth, guint o_nth, GstBuffer * buffer,
     unsigned long size = gst_buffer_get_size (data->buffer);
     GST_DEBUG ("Pushed [%d] (size : %lu)\n", nth, size);
   }
-
+  printf ("repo_sink] Set Buffer ================ %d \n", set_buffer_count);
   GST_TENSOR_REPO_SIGNAL_PUSH (nth);
+  printf ("repo_sink] signaling pushed %d \n", set_buffer_count);
+  set_buffer_count++;
   GST_TENSOR_REPO_UNLOCK (nth);
   return TRUE;
 }
@@ -297,15 +306,21 @@ gst_tensor_repo_check_changed (guint nth, guint * newid, gboolean is_sink)
 gboolean
 gst_tensor_repo_set_eos (guint nth)
 {
+  printf ("src set_eos ] Start\n");
   GST_TENSOR_REPO_LOCK (nth);
+  printf ("src set_eos ] get_lock_nth %d\n", nth);
   GstTensorRepoData *data = gst_tensor_repo_get_repodata (nth);
+  printf ("src set_eos ] get_data\n");
   data->eos = TRUE;
+  printf ("src set_eos ] data->eos = TRUE\n");
   GST_TENSOR_REPO_SIGNAL_PUSH (nth);
+  GST_TENSOR_REPO_SIGNAL_PULL (nth);
   GST_TENSOR_REPO_UNLOCK (nth);
+  printf ("src set_eos ] unlock \n");
   return data->eos;
 }
 
-
+int get_buffer_count = 1;
 /**
  * @brief get GstTensorRepoData from repo
  */
@@ -320,18 +335,22 @@ gst_tensor_repo_get_buffer (guint nth, guint o_nth, gboolean * eos,
   current_data = gst_tensor_repo_get_repodata (nth);
 
   while (!current_data->buffer) {
+    printf ("reposrc] start wainting pushed\n");
     if (gst_tensor_repo_check_changed (nth, newid, FALSE)) {
+      printf ("reposrc] repo_check_changed : true\n");
       buf = NULL;
       goto done;
     }
 
     if (gst_tensor_repo_check_eos (nth)) {
+      printf ("reposrc] repo_check_eos : true\n");
       *eos = TRUE;
       buf = NULL;
       goto done;
     }
     GST_TENSOR_REPO_WAIT_PUSH (nth);
   }
+  printf ("reposrc] stop waiting pushed : true\n");
 
   buf = gst_buffer_copy_deep (current_data->buffer);
   gst_buffer_unref (current_data->buffer);
@@ -339,10 +358,14 @@ gst_tensor_repo_get_buffer (guint nth, guint o_nth, gboolean * eos,
     unsigned long size = gst_buffer_get_size (buf);
     GST_DEBUG ("Popped [ %d ] (size: %lu)\n", nth, size);
   }
+  printf ("reposrc] done making buf ============== %d\n", get_buffer_count);
+
 
 done:
   current_data->buffer = NULL;
   GST_TENSOR_REPO_SIGNAL_PULL (nth);
+  printf ("repo_src] signaling pulled %d \n", get_buffer_count);
+  get_buffer_count++;
   GST_TENSOR_REPO_UNLOCK (nth);
   return buf;
 }
